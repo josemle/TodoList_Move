@@ -16,4 +16,14 @@ module todolist_addr::todolist {
         content: String,
         completed: bool
     }
+
+    public entry fun create_list(account: &signer) {
+        let tasks_holder = TodoList  {
+            tasks: table::new(),
+            set_task_event: account::new_event_handle<Task>(account),
+            task_counter: 0
+        };
+
+        move_to(account, tasks_holder);
+    }
 }
