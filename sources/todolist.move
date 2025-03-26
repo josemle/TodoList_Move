@@ -6,6 +6,11 @@ module todolist_addr::todolist {
     use aptos_std::table::{Self, Table};
     use aptos_framework::account;
 
+    // Errors
+    const E_NOT_INITIALIZED: u64 = 1;
+    const ETASK_DOESNT_EXIST: u64 = 2;
+    const ETASK_IS_COMPLETED: u64 = 3;
+
     struct TodoList has key {
         tasks: Table<u64, Task>,
         set_task_event: event::EventHandle<Task>,
@@ -47,5 +52,21 @@ module todolist_addr::todolist {
             &mut borrow_global_mut<TodoList>(signer_address).set_task_event,
             new_task
         );
+    }
+
+    public entry fun complete_task(account: &signer, task_id: u64) acquires TodoList {
+        // gets the signer address
+        let signer_address = signer::address_of(account);
+        assert!(exists<TodoList>(signer_address), E_NOT_INITIALIZED);
+        // gets the TodoList resource
+        let todo_list = borrow_global_mut<TodoList>(signer_address);
+        // assert task exists
+        assert!(table::contains(&todo_list.tasks, task_id), ETASK_DOESNT_EXIST);
+        // gets the task matched the task_id
+        let task_record = table::borrow_mut(&mut todo_list.tasks, task_id);
+        // assert task is not completed
+        assert!(task_record.completed == false, ETASK_IS_COMPLETED);
+        // update task as completed
+        task_record.completed = true;
     }
 }
