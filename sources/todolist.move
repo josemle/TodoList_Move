@@ -1,6 +1,7 @@
 module todolist_addr::todolist {
 
     use aptos_framework::event;
+    use std::string;
     use std::string::String;
     use std::signer;
     use aptos_std::table::{Self, Table};
@@ -97,5 +98,13 @@ module todolist_addr::todolist {
         assert!(task_record.completed == true, 11);
         assert!(task_record.content == string::utf8(b"New Task"), 12);
         assert!(task_record.address == signer::address_of(&admin), 13);
+    }
+    #[test(admin = @0x123)]
+    #[expected_failure(abort_code = E_NOT_INITIALIZED)]
+    public entry fun account_can_not_update_task(admin: signer) acquires TodoList {
+        // creates an admin @todolist_addr account for test
+        account::create_account_for_test(signer::address_of(&admin));
+        // account can not toggle task as no list was created
+        complete_task(&admin, 2);
     }
 }
